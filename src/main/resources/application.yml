@@ -1,0 +1,22 @@
+management:
+  endpoint:
+    health.enabled: true
+    camelroutes:
+      enabled: true
+      read-only: true
+  endpoints.web.exposure.include: info,health,camelroutes
+
+camel:
+  springboot.name: av-caching-proxy
+
+application:
+  cache:
+    enabled: true
+    ttl: 15000
+  alpha-vantage:
+    scheme: "https"
+    host: "www.alphavantage.co"
+    port: 443
+    throttle-enabled: true
+    throttle-requests: 1
+    throttle-period: 1000

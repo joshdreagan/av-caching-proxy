@@ -1,0 +1,10 @@
+metadata:
+  name: ${project.artifactId}-configmap
+data:
+  application.yml: |-
+    application:
+      cache:
+        enabled: true
+        ttl: 15000
+      alpha-vantage:
+        throttle-enabled: true
