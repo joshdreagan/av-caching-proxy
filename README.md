@@ -39,7 +39,7 @@ mvn -P openshift clean package oc:deploy
 | Property | Default | Description |
 | :------- | :------ | :---------- |
 | `application.cache.enabled` | `true` | Enable caching of API responses.
-| `application.cache.ttl` | 15000 | The time (in milliseconds) before cached responses expire.
+| `application.cache.ttl` | 86400000 | The time (in milliseconds) before cached responses expire. Default is one day.
 | `application.alpha-vantage.scheme` | "https" | The scheme for the Alpha Vantage API. Valid values are "http" or "https".
 | `application.alpha-vantage.host` | "www.alphavantage.co" | The host name for the Alpha Vantage API.
 | `application.alpha-vantage.port` | `443` | The port for the Alpha Vantage API.
