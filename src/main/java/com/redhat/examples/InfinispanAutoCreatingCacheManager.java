@@ -144,6 +144,7 @@ public class InfinispanAutoCreatingCacheManager implements EmbeddedCacheManager 
   @Override
   public <K, V> Cache<K, V> getCache(String cacheName) {
     if (!this.cacheExists(cacheName)) {
+      log.debug("Auto-creating cache with default configuration: cache='{}'", cacheName);
       return this.createCache(cacheName, this.defaultConfiguration);
     }
     return delegate.getCache(cacheName);

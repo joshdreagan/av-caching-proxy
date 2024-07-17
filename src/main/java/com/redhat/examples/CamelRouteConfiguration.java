@@ -62,7 +62,7 @@ public class CamelRouteConfiguration extends RouteBuilder {
     ;
     
     from("direct:cachingProxy")
-      .log(LoggingLevel.INFO, log, "Fetching from cache: symbol='${header.symbol}'")
+      .log(LoggingLevel.INFO, log, "Fetching from cache: symbol='${header.symbol}', cache='${header.function.toUpperCase()}'")
       .routingSlip().simple("infinispan-embedded:${header.function.toUpperCase()}?cacheContainer=#defaultCacheManager&operation=GET&key=${header.symbol.toUpperCase()}")
       .filter().simple("${body} == ${null}")
         .to("seda:backend")
