@@ -13,12 +13,10 @@
  */
 package com.redhat.examples;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.infinispan.InfinispanConstants;
-import org.apache.camel.model.dataformat.JsonLibrary;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.slf4j.Logger;
@@ -46,7 +44,7 @@ public class CamelRouteConfiguration extends RouteBuilder {
   @Override
   public void configure() {
     
-    from("rest:get:{path}?produces=application/json")
+    from("rest:get:{path}?produces=application/json&bindingMode=off")
       .filter().constant(!config.cache().enabled())
         .to("seda:backend")
         .stop()
@@ -57,13 +55,14 @@ public class CamelRouteConfiguration extends RouteBuilder {
         .otherwise()
           .to("seda:backend")
       .end()
+      .removeHeaders(".*")
     ;
     
     from("direct:cachingProxy")
       .log(LoggingLevel.INFO, log, "Fetching from cache: symbol='${header.symbol}'")
       .routingSlip().simple("infinispan-embedded:${header.function.toUpperCase()}?cacheContainer=#defaultCacheManager&operation=GET&key=${header.symbol.toUpperCase()}")
       .filter().simple("${body} == ${null}")
-        .to("direct:backend")
+        .to("seda:backend")
         .setHeader(InfinispanConstants.KEY).simple("${header.symbol.toUpperCase()}")
         .setHeader(InfinispanConstants.VALUE).body()
         .setHeader(InfinispanConstants.LIFESPAN_TIME).constant(config.cache().ttl())
@@ -80,17 +79,12 @@ public class CamelRouteConfiguration extends RouteBuilder {
       .throttle(config.alphaVantage().throttleRequests()).timePeriodMillis(config.alphaVantage().throttleRequests()).disabled(!config.alphaVantage().throttleEnabled())
       .routingSlip().simple(String.format("%s://%s:%s/${header.path}?followRedirects=true&bridgeEndpoint=true", config.alphaVantage().scheme(), config.alphaVantage().host(), config.alphaVantage().port()))
       .log(LoggingLevel.DEBUG, log, "Backend response: symbol='${header.symbol}', response='${body}'")
-      .unmarshal().json(JsonLibrary.Jackson, Map.class)
-      .filter().simple("${body} == ${null} || ${body.isEmpty()}")
+      .filter().simple("${body} == ${null}")
         .log(LoggingLevel.WARN, log, "Unable to get backend response: symbol='${header.symbol}', message='Empty/null response returned.'")
         .stop()
       .end()
-      .filter().simple("${body.containsKey('Error Message')}")
-        .log(LoggingLevel.WARN, log, "Unable to get backend response: symbol='${header.symbol}', message='${body['Error Message']}'")
-        .stop()
-      .end()
-      .filter().simple("${body.containsKey('Information')}")
-        .log(LoggingLevel.WARN, log, "Unable to fetch company overview: symbol='${header.symbol}', message='${body['Information']}'")
+      .filter().jq("has(\"Error Message\") or has(\"Information\")")
+        .log(LoggingLevel.WARN, log, "Unable to get backend response: symbol='${header.symbol}', message='${jq(.[] | .)}'")
         .stop()
       .end()
      ;
