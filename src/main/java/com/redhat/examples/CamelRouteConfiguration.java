@@ -17,8 +17,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.infinispan.InfinispanConstants;
+import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +36,11 @@ public class CamelRouteConfiguration extends RouteBuilder {
   ApplicationConfiguration config;
   
   @Bean
-  DefaultCacheManager defaultCacheManager() {
-    DefaultCacheManager cacheManager = new DefaultCacheManager();
+  EmbeddedCacheManager defaultCacheManager() {
+    EmbeddedCacheManager delegateCacheManager = new DefaultCacheManager();
     ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-    cacheManager.createCache("OVERVIEW", configurationBuilder.simpleCache(true).build());
+    Configuration defaultConfiguration = configurationBuilder.simpleCache(true).build();
+    EmbeddedCacheManager cacheManager = new InfinispanAutoCreatingCacheManager(delegateCacheManager, defaultConfiguration);
     return cacheManager;
   }
   
