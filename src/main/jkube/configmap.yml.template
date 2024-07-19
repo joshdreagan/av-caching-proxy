@@ -5,6 +5,6 @@ data:
     application:
       cache:
         enabled: true
-        ttl: 15000
+        ttl: 86400000
       alpha-vantage:
         throttle-enabled: true
